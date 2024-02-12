@@ -1,5 +1,5 @@
 load './app/database_conector.rb'
-require 'pry'
+
 class CrebitService
   class NotFound < StandardError; end
   class InvalidDataSupplied < StandardError; end
@@ -35,15 +35,22 @@ class CrebitService
 
       query_result = conn.exec_params(query, [customer_id])
 
-      result["ultimas_transacoes"] = query_result.to_a
+      result["ultimas_transacoes"] = query_result.map do |transaction|
+        {
+          "valor": transaction["valor"].to_i,
+          "tipo": transaction["tipo"],
+          "descricao": transaction["descricao"],
+          "realizada_em": transaction["realizada_em"],
+        }
+      end
     end
 
     result
   end
 
   def create_transaction(customer_id, valor, tipo, descricao)
-    params = [customer_id, tipo, descricao]
-    raise InvalidDataSupplied if params.select{|i| i&.empty?} && valor.nil?
+    raise InvalidDataSupplied unless customer_id && valor && tipo && descricao
+    raise InvalidDataSupplied if descricao && descricao.empty? || descricao.length > 10
 
     query = <<~SQL
       SELECT limite, saldo
@@ -60,28 +67,30 @@ class CrebitService
       VALUES ($1, $2, $3, $4)
     SQL
 
-    verify_limit(query_result['saldo'], query_result['limite'], valor, tipo)
+    raise InvalidDataSupplied unless ["d","c"].include?(tipo)
+
+    if tipo == 'd' && verify_limit(query_result['saldo'], query_result['limite'], valor)
+      raise LimitError
+    end
 
     db.exec_params(query, [customer_id, valor, tipo, descricao])
-
-    raise InvalidDataSupplied unless ["d", "c"].include?(tipo)
 
     case tipo
     in 'd'
       query = <<~SQL
         UPDATE customers
-        SET saldo = saldo - $2
-        WHERE id = $1
+        SET saldo = saldo - $1
+        WHERE id = $2
       SQL
     in 'c'
       query = <<~SQL
         UPDATE customers
-        SET saldo = saldo + $2
-        WHERE id = $1
+        SET saldo = saldo + $1
+        WHERE id = $2
       SQL
     end
 
-    db.exec_params(query, [customer_id, valor]).first
+    db.exec_params(query, [valor, customer_id])
 
     query = <<~SQL
       SELECT limite, saldo
@@ -90,6 +99,11 @@ class CrebitService
     SQL
 
     query_result = db.exec_params(query, [customer_id]).first
+
+    result = {
+      "limite": query_result["limite"].to_i,
+      "saldo": query_result["saldo"].to_i,
+    }
   end
 
   private
@@ -98,9 +112,8 @@ class CrebitService
     DatabaseConector.connections.checkout
   end
 
-  def verify_limit(saldo, limite, valor, tipo)
-    if tipo == 'd' && (saldo.to_i - valor.to_i) > limite.to_i
-      raise LimitError 
-    end
+  def verify_limit(saldo, limite, valor)
+    return false if (saldo.to_i - valor.to_i) > limite.to_i
+    (saldo.to_i - valor.to_i).abs > limite.to_i
   end
 end
