@@ -11,7 +11,7 @@ state_path "#{RUN}/puma-#{name}.state"
 
 tag name
 
-workers ENV.fetch("WEB_CONCURRENCY") { 3 }
+workers ENV.fetch("WEB_CONCURRENCY") { 4 }
 threads 0, 5
 
 preload_app!

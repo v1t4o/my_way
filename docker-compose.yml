@@ -15,12 +15,11 @@ services:
       - "8081:8080"
     depends_on:
       - postgres
-      - pgbouncer
     deploy:
       resources:
         limits:
-          cpus: "0.2"
-          memory: "100MB"
+          cpus: "0.3"
+          memory: "150MB"
 
   api2:
     <<: *api 
@@ -45,7 +44,7 @@ services:
       resources:
         limits:
           cpus: "0.2"
-          memory: "150MB"
+          memory: "100MB"
 
   postgres:
     image: postgres:latest
@@ -64,29 +63,7 @@ services:
       resources:
         limits:
           cpus: "0.7"
-          memory: "100MB"
-
-  pgbouncer:
-    image: pgbouncer/pgbouncer
-    hostname: pgbouncer
-    container_name: pgbouncer
-    environment:
-      - DATABASES_HOST=postgres
-      - DATABASES_PORT=5432
-      - DATABASES_USER=frank
-      - DATABASES_PASSWORD=sinatra
-      - DATABASES_DBNAME=postgres
-      - DATABASES_POOL_SIZE=100
-      - PGBOUNCER_MAX_CLIENT_CONN=100
-      - PGBOUNCER_RESERVE_POOL_SIZE=100
-      - PGBOUNCER_DEFAULT_POOL_SIZE=100
-    depends_on:
-      - postgres
-    deploy:
-      resources:
-        limits:
-          cpus: '0.2'
-          memory: '100MB'
+          memory: "150MB"
 
 volumes:
   rubygems:
