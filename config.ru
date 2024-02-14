@@ -1,10 +1,5 @@
-require './my_way'
+$:.unshift("lib")
 
-# Sinatra (optional) config
-enable :logging, :static
+require_relative "app/application"
 
-configure :production do
-  disable :logging
-end
-
-run Sinatra::Application
+run Application

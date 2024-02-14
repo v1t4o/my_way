@@ -9,7 +9,7 @@ services:
       - rubygems:/usr/local/bundle
     hostname: api1
     environment:
-      - DB_POOL_SIZE=10
+      - DB_POOL_SIZE=5
       - DB_HOSTNAME=postgres
     ports:
       - "8081:8080"
@@ -19,7 +19,7 @@ services:
       resources:
         limits:
           cpus: "0.3"
-          memory: "150MB"
+          memory: "100MB"
 
   api2:
     <<: *api 
@@ -44,7 +44,7 @@ services:
       resources:
         limits:
           cpus: "0.2"
-          memory: "100MB"
+          memory: "50MB"
 
   postgres:
     image: postgres:latest
@@ -63,7 +63,7 @@ services:
       resources:
         limits:
           cpus: "0.7"
-          memory: "150MB"
+          memory: "300MB"
 
 volumes:
   rubygems:
