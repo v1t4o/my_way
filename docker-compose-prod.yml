@@ -1,10 +1,7 @@
 services:
   api1: &api
-    build: .
+    image: v1t4o/my_way
     container_name: api1
-    volumes:
-      - .:/app
-      - rubygems:/usr/local/bundle
     hostname: api1
     environment:
       - DB_POOL_SIZE=5
@@ -29,9 +26,9 @@ services:
       - "8082:8080"
  
   nginx:
-    image: nginx:latest
+    image: nginx
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - api1
       - api2
@@ -45,7 +42,7 @@ services:
           memory: "50MB"
 
   postgres:
-    image: postgres:latest
+    image: postgres
     hostname: db
     environment:
       - POSTGRES_PASSWORD=sinatra
@@ -62,6 +59,3 @@ services:
         limits:
           cpus: "0.7"
           memory: "300MB"
-
-volumes:
-  rubygems:
