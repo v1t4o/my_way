@@ -1,9 +1,7 @@
 require "sinatra/base"
-require_relative "../lib/services/crebit_service"
+require_relative "services/crebit_service"
 
 class Application < Sinatra::Base
-  set :views, File.join(settings.root, "/views")
-
   post '/clientes/:id/transacoes' do
     body = JSON.parse(request.body.read)
   
@@ -22,7 +20,7 @@ class Application < Sinatra::Base
   end
   
   get '/clientes/:id/extrato' do
-    customer_id = params[:id]&.to_i
+    customer_id = params[:id]
   
     service = CrebitService.new
   
