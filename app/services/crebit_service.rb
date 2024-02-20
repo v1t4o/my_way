@@ -9,39 +9,41 @@ class CrebitService
     result = {}
 
     pool.with do |db|
-      query = <<~SQL
-        SELECT limite, saldo
-        FROM customers
-        WHERE id = $1
-      SQL
+      db.transaction do |conn|
+        query = <<~SQL
+          SELECT limite, saldo
+          FROM customers
+          WHERE id = $1
+        SQL
 
-      query_result = db.exec_params(query, [customer_id]).first
+        query_result = conn.exec_params(query, [customer_id]).first
 
-      raise NotFound unless query_result
+        raise NotFound unless query_result
 
-      result["saldo"] = {
-        "total": query_result["saldo"].to_i,
-        "data_extrato": DateTime.now.to_s,
-        "limite": query_result["limite"].to_i
-      }
-
-      query = <<~SQL
-        SELECT valor, tipo, descricao, realizada_em
-        FROM transactions
-        WHERE customer_id = $1
-        ORDER BY realizada_em DESC
-        LIMIT 10
-      SQL
-
-      query_result = db.exec_params(query, [customer_id])
-
-      result["ultimas_transacoes"] = query_result.map do |transaction|
-        {
-          "valor": transaction["valor"].to_i,
-          "tipo": transaction["tipo"],
-          "descricao": transaction["descricao"],
-          "realizada_em": transaction["realizada_em"],
+        result["saldo"] = {
+          "total": query_result["saldo"].to_i,
+          "data_extrato": DateTime.now.to_s,
+          "limite": query_result["limite"].to_i
         }
+
+        query = <<~SQL
+          SELECT valor, tipo, descricao, realizada_em
+          FROM transactions
+          WHERE customer_id = $1
+          ORDER BY realizada_em DESC
+          LIMIT 10
+        SQL
+
+        query_result = conn.exec_params(query, [customer_id])
+
+        result["ultimas_transacoes"] = query_result.map do |transaction|
+          {
+            "valor": transaction["valor"].to_i,
+            "tipo": transaction["tipo"],
+            "descricao": transaction["descricao"],
+            "realizada_em": transaction["realizada_em"],
+          }
+        end
       end
     end
 
