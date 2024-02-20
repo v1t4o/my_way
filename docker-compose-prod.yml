@@ -4,7 +4,7 @@ services:
     container_name: api1
     hostname: api1
     environment:
-      - DB_POOL_SIZE=5
+      - DB_POOL_SIZE=15
       - DB_HOSTNAME=postgres
     ports:
       - "8081:8080"
